@@ -1,0 +1,116 @@
+import {create} from "zustand";
+import {api} from "../lib/axios.js";
+import toast from "react-hot-toast";
+import {io, Socket} from "socket.io-client";
+
+const BASE_URL = import.meta.env.MODE === "development" ? "http://192.168.5.136:5001/api/v1" : "/";
+
+export const useAuthStore = create((set,get) => ({
+    authUser: null,
+    isSigningUp: false,
+    isLoggingIn: false,
+    isUpdatingProfile: false,
+    isCheckingAuth: true,
+    onlineUsers: [],
+    socket: null,
+
+    checkAuth: async () =>{
+        try{
+            const res = await api.get("/auth/check");
+            set({authUser: res.data});
+
+            get().connectSocket();
+        } catch (error){
+            console.error("Auth check failed", error);
+            set({authUser: null});
+        } finally {
+            set({isCheckingAuth: false});
+        }
+    },
+
+    signup: async (formData) => {
+        set({isSigningUp: true});
+        try{
+            const res = await api.post("/auth/sign-up", formData);
+            toast.success("Account Created");
+            set({authUser: res.data});
+
+            get().connectSocket();
+        } catch (error){
+            console.log("Backend Error: Error Signing Up");
+            toast.error(error.response.data.message);
+        } finally {
+            set({isSigningUp: false})
+        }
+    },
+
+    logout: async () => {
+        try{
+            await api.post("/auth/sign-out");
+            set({authUser: null});
+            toast.success("User Logged Out");
+
+            get().disconnectSocket();
+        } catch (error){
+            toast.error(error.response.data.message);
+        }
+    },
+
+    login: async (formData) => {
+        set({isLoggingIn: true});
+        try{
+            const res = await api.post("/auth/sign-in", formData);
+            set({authUser: res.data});
+            toast.success("Logged In");
+
+            get().connectSocket();
+        } catch (error){
+            toast.error(error.response.data.message);
+        } finally {
+            set({isLoggingIn: false})
+        }
+    },
+
+    updateProfile: async (data) => {
+        const currentUser = get().authUser; // get() comes from zustand API
+        if (!currentUser?._id) {
+            toast.error("User not loaded");
+            return;
+        }
+
+        set({ isUpdatingProfile: true });
+        try {
+            console.log(currentUser);
+            const res = await api.put(`/auth/update-profile/${currentUser._id}`, data)
+            set({ authUser: res.data });
+            toast.success("Profile updated successfully");
+        } catch (error) {
+            console.log("Error updating profile", error);
+            toast.error(error.response?.data?.message || "Error updating profile");
+        } finally {
+            set({ isUpdatingProfile: false });
+        }
+    },
+
+    connectSocket: () => {
+        const {authUser} = get()
+        if(!authUser || get().socket?.connected) return;
+
+        const socket = io(BASE_URL, {
+            query: {
+                userId: authUser._id,
+            },
+        });
+        socket.connect();
+
+        set({socket: socket})
+
+        socket.on("getOnlineUsers", (userIds) => {
+            set({onlineUsers: userIds});
+        });
+    },
+    disconnectSocket: () => {
+        if (get().socket?.connected) get().socket.disconnect();
+    },
+    
+}));
