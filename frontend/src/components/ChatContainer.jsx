@@ -1,9 +1,9 @@
 import { useChatStore } from "../store/useChatStore";
 import { useEffect, useRef } from "react";
-
 import ChatHeader from "./ChatHeader";
 import MessageInput from "./MessageInput";
 import MessageSkeleton from "./skeletons/MessageSkeleton";
+import ChattingSkeleton from "./skeletons/ChattingSkeleton";
 import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../lib/utils";
 
@@ -16,6 +16,7 @@ const ChatContainer = () => {
     updateMessage,
     closeMessage,
   } = useChatStore();
+
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
 
@@ -51,26 +52,28 @@ const ChatContainer = () => {
         {messages.map((message) => (
           <div
             key={message._id}
-            className={`chat ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}
+            className={`chat ${message.senderId === (authUser._id || authUser.userData._id) ? "chat-end" : "chat-start"}`}
             ref={messageEndRef}
           >
             <div className=" chat-image avatar">
               <div className="size-10 rounded-full border">
                 <img
                   src={
-                    message.senderId === authUser._id
-                      ? authUser.profilePic || "../public/user-avatar.png"
-                      : selectedUser.profilePic || "../public/user-avatar.png"
+                    message.senderId === (authUser._id || authUser.userData._id)
+                      ? (authUser.profilePic || authUser.userData?.profilePic) || "user-avatar.png"
+                      : (selectedUser.profilePic || selectedUser.userData?.profilePic) || "user-avatar.png"
                   }
                   alt="profile pic"
                 />
               </div>
             </div>
+
             <div className="chat-header mb-1">
               <time className="text-xs opacity-50 ml-1">
                 {formatMessageTime(message.createdAt)}
               </time>
             </div>
+
             <div className="chat-bubble flex flex-col">
               {message.image && (
                 <img
@@ -83,6 +86,8 @@ const ChatContainer = () => {
             </div>
           </div>
         ))}
+        
+        <ChattingSkeleton/>
       </div>
 
       <MessageInput />

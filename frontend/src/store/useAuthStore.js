@@ -1,7 +1,7 @@
 import {create} from "zustand";
 import {api} from "../lib/axios.js";
 import toast from "react-hot-toast";
-import {io, Socket} from "socket.io-client";
+import { useSocketStore } from "./useSocketStore.js";
 
 const BASE_URL = import.meta.env.MODE === "development" ? "http://192.168.5.136:5001/api/v1" : "/";
 
@@ -11,15 +11,14 @@ export const useAuthStore = create((set,get) => ({
     isLoggingIn: false,
     isUpdatingProfile: false,
     isCheckingAuth: true,
-    onlineUsers: [],
-    socket: null,
 
     checkAuth: async () =>{
+        const socket = useSocketStore.getState();
         try{
             const res = await api.get("/auth/check");
             set({authUser: res.data});
 
-            get().connectSocket();
+            socket.connectSocket(get().authUser);
         } catch (error){
             console.error("Auth check failed", error);
             set({authUser: null});
@@ -30,12 +29,14 @@ export const useAuthStore = create((set,get) => ({
 
     signup: async (formData) => {
         set({isSigningUp: true});
+        const socket = useSocketStore.getState();
+
         try{
             const res = await api.post("/auth/sign-up", formData);
             toast.success("Account Created");
             set({authUser: res.data});
 
-            get().connectSocket();
+            socket.connectSocket(get().authUser);
         } catch (error){
             console.log("Backend Error: Error Signing Up");
             toast.error(error.response.data.message);
@@ -45,12 +46,13 @@ export const useAuthStore = create((set,get) => ({
     },
 
     logout: async () => {
+        const socket = useSocketStore.getState();
         try{
             await api.post("/auth/sign-out");
             set({authUser: null});
             toast.success("User Logged Out");
 
-            get().disconnectSocket();
+            socket.disconnectSocket();
         } catch (error){
             toast.error(error.response.data.message);
         }
@@ -58,12 +60,14 @@ export const useAuthStore = create((set,get) => ({
 
     login: async (formData) => {
         set({isLoggingIn: true});
+        const socket = useSocketStore.getState();
         try{
             const res = await api.post("/auth/sign-in", formData);
-            set({authUser: res.data});
             toast.success("Logged In");
 
-            get().connectSocket();
+            set({authUser: res.data});
+
+            socket.connectSocket(get().authUser);
         } catch (error){
             toast.error(error.response.data.message);
         } finally {
@@ -90,27 +94,6 @@ export const useAuthStore = create((set,get) => ({
         } finally {
             set({ isUpdatingProfile: false });
         }
-    },
-
-    connectSocket: () => {
-        const {authUser} = get()
-        if(!authUser || get().socket?.connected) return;
-
-        const socket = io(BASE_URL, {
-            query: {
-                userId: authUser._id,
-            },
-        });
-        socket.connect();
-
-        set({socket: socket})
-
-        socket.on("getOnlineUsers", (userIds) => {
-            set({onlineUsers: userIds});
-        });
-    },
-    disconnectSocket: () => {
-        if (get().socket?.connected) get().socket.disconnect();
     },
     
 }));

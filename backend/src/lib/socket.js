@@ -7,7 +7,8 @@ const server = http.createServer(app);
 
 const websocket = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", "http://192.168.5.136:5173"]
+    origin: ["http://localhost:5173", "http://192.168.5.136:5173", "*"],
+    methods: ["GET", "POST"],
   },
 });
 
@@ -33,6 +34,12 @@ websocket.on("connection", (socket) => {
         delete userSocketMap[userId];
         websocket.emit("getOnlineUsers", Object.keys(userSocketMap))
     });
+
+    socket.on("typing", ({receiverId, isTyping}) => {
+      const receiverSocketId = userSocketMap[receiverId];
+      websocket.to(receiverSocketId).emit("isTyping", {userId: userId, isTyping: isTyping});
+    });
+    
 });
 
 export {websocket, app, server};

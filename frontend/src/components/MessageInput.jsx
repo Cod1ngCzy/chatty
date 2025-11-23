@@ -2,12 +2,14 @@ import { useRef, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { Image, Send, X } from "lucide-react";
 import toast from "react-hot-toast";
+import { useSocketStore } from "../store/useSocketStore";
+import ChattingSkeleton from "./skeletons/ChattingSkeleton";
 
 const MessageInput = () => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
-  const { sendMessage } = useChatStore();
+  const { sendMessage, selectedUser, isTyping, isReceiverTyping} = useChatStore();
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -47,6 +49,16 @@ const MessageInput = () => {
     }
   };
 
+  const handleInputChange = (e) => {
+    setText(e.target.value) 
+    isTyping(); 
+
+    if(selectedUser){
+      return ( <ChattingSkeleton isReceiverTyping={isReceiverTyping} /> )
+    }
+
+  }
+
   return (
     <div className="p-4 w-full">
       {imagePreview && (
@@ -76,14 +88,16 @@ const MessageInput = () => {
             className="w-full input input-bordered rounded-lg input-sm sm:input-md"
             placeholder="Type a message..."
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={handleInputChange}
           />
           <input
             type="file"
             accept="image/*"
             className="hidden"
             ref={fileInputRef}
-            onChange={handleImageChange}
+            onChange={() => {handleImageChange
+              console.log("image");
+            }}
           />
 
           <button

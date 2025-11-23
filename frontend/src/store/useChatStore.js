@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import toast from "react-hot-toast";
 import { api } from "../lib/axios.js";
-import { useAuthStore } from "./useAuthStore.js";
+import { useSocketStore } from "./useSocketStore.js";
 
 export const useChatStore = create((set, get) => ({
     messages: [],
@@ -9,6 +9,7 @@ export const useChatStore = create((set, get) => ({
     selectedUser: null,
     isUserLoading: false,
     isMessagesLoading: false,
+    isReceiverTyping: false,
 
     getUsers: async () => {
         set({ isUserLoading: true});
@@ -48,7 +49,7 @@ export const useChatStore = create((set, get) => ({
         const { selectedUser } = get();
         if (!selectedUser) return;
 
-        const socket = useAuthStore.getState().socket;
+        const socket = useSocketStore.getState().socket;
         
 
         socket.on("newMessage", (newMessage) => {
@@ -61,8 +62,22 @@ export const useChatStore = create((set, get) => ({
     },
 
     closeMessage: () => {
-        const socket = useAuthStore.getState().socket;
+        const socket = useSocketStore.getState().socket;
+
         socket.off("newMessage");
+    },
+
+    isTyping: () => {
+        // Emit this only to the user we are talking to
+        const { selectedUser } = useChatStore.getState();
+        const { socket } = useSocketStore.getState();
+
+        if (!selectedUser._id) return;
+
+        socket.emit("typing", { receiverId: selectedUser._id, isTyping: true });
+        setTimeout(() => {
+            socket.emit("typing", { receiverId: selectedUser._id, isTyping: false });
+        }, 2000);
     },
 
     setSelectedUser: (selectedUser) => set({selectedUser}),
