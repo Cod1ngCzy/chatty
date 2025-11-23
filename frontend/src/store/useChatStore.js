@@ -63,7 +63,6 @@ export const useChatStore = create((set, get) => ({
 
     closeMessage: () => {
         const socket = useSocketStore.getState().socket;
-
         socket.off("newMessage");
     },
 

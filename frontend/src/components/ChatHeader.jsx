@@ -1,5 +1,4 @@
-import { X } from "lucide-react";
-import { useAuthStore } from "../store/useAuthStore";
+import { ArrowLeftFromLine } from "lucide-react";
 import { useChatStore } from "../store/useChatStore";
 import { useSocketStore } from "../store/useSocketStore";
 
@@ -29,7 +28,7 @@ const ChatHeader = () => {
 
         {/* Close button */}
         <button onClick={() => setSelectedUser(null)}>
-          <X />
+          <ArrowLeftFromLine />
         </button>
       </div>
     </div>

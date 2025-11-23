@@ -52,11 +52,6 @@ const MessageInput = () => {
   const handleInputChange = (e) => {
     setText(e.target.value) 
     isTyping(); 
-
-    if(selectedUser){
-      return ( <ChattingSkeleton isReceiverTyping={isReceiverTyping} /> )
-    }
-
   }
 
   return (
@@ -95,14 +90,12 @@ const MessageInput = () => {
             accept="image/*"
             className="hidden"
             ref={fileInputRef}
-            onChange={() => {handleImageChange
-              console.log("image");
-            }}
+            onChange={(e) => {handleImageChange(e)}}
           />
 
           <button
             type="button"
-            className={`hidden sm:flex btn btn-circle
+            className={`flex sm: btn btn-circle
                      ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`}
             onClick={() => fileInputRef.current?.click()}
           >
