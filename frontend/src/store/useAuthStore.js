@@ -18,7 +18,7 @@ export const useAuthStore = create((set,get) => ({
             const res = await api.get("/auth/check");
             set({authUser: res.data});
 
-            socket.connectSocket(get().authUser);
+            socket.connectSocket(res.data);
         } catch (error){
             console.error("Auth check failed", error);
             set({authUser: null});
@@ -63,11 +63,13 @@ export const useAuthStore = create((set,get) => ({
         const socket = useSocketStore.getState();
         try{
             const res = await api.post("/auth/sign-in", formData);
+
+            const userData = res.data.userData;
+
             toast.success("Logged In");
+            set({authUser: userData});
 
-            set({authUser: res.data});
-
-            socket.connectSocket(get().authUser);
+            socket.connectSocket(userData);
         } catch (error){
             toast.error(error.response.data.message);
         } finally {

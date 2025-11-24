@@ -10,7 +10,8 @@ export const useChatStore = create((set, get) => ({
     isUserLoading: false,
     isMessagesLoading: false,
     isReceiverTyping: false,
-
+    isShowSettings: false,
+    
     getUsers: async () => {
         set({ isUserLoading: true});
         try{
@@ -47,11 +48,10 @@ export const useChatStore = create((set, get) => ({
 
     updateMessage: () => {
         const { selectedUser } = get();
-        if (!selectedUser) return;
-
         const socket = useSocketStore.getState().socket;
-        
 
+        if (!selectedUser || !socket) return;
+        
         socket.on("newMessage", (newMessage) => {
             const isMessageFromSelectedUser = newMessage.senderId === selectedUser._id;
             if(!isMessageFromSelectedUser) return;
@@ -63,6 +63,7 @@ export const useChatStore = create((set, get) => ({
 
     closeMessage: () => {
         const socket = useSocketStore.getState().socket;
+        if (!socket) return;
         socket.off("newMessage");
     },
 

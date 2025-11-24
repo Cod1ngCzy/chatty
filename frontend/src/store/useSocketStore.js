@@ -11,24 +11,25 @@ export const useSocketStore = create((set,get) => ({
     isTyping: false,
 
     connectSocket: (authUser) => {
+        const { socket } = get();
         // authUser is coming from the useAuthStore state; where if user is not authenticated, return.
-        if (!authUser || get().socket?.connected) return;
+        if (!authUser || socket?.connected) return;
 
-        const socket = io(SOCKET_BASE_URL, {
+        const newSocket = io(SOCKET_BASE_URL, {
             query: {
                 userId: authUser._id,
             },
         });
 
-        socket.connect();
+        newSocket.connect();
 
-        set({socket: socket})
+        set({socket: newSocket})
 
-        socket.on("getOnlineUsers", (userIds) => {
+        newSocket.on("getOnlineUsers", (userIds) => {          
             set({onlineUsers: userIds});
         });
 
-        socket.on("isTyping", ({userId, isTyping}) => {
+        newSocket.on("isTyping", ({userId, isTyping}) => {
             set({isTyping: isTyping});
         });
     },
