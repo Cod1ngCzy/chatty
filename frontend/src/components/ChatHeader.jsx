@@ -1,10 +1,15 @@
-import { ArrowLeftFromLine } from "lucide-react";
+import { ArrowLeftFromLine, CircleAlert } from "lucide-react";
 import { useChatStore } from "../store/useChatStore";
 import { useSocketStore } from "../store/useSocketStore";
+import { useState } from "react";
 
 const ChatHeader = () => {
-  const { selectedUser, setSelectedUser } = useChatStore();
+  const { selectedUser, setSelectedUser, isShowSettings} = useChatStore();
   const { onlineUsers } = useSocketStore();
+
+  const handleChatSettings = () => {
+    useChatStore.setState({isShowSettings: !isShowSettings});
+  }
 
   return (
     <div className="p-2.5 border-b border-base-300">
@@ -13,7 +18,7 @@ const ChatHeader = () => {
           {/* Avatar */}
           <div className="avatar">
             <div className="size-10 rounded-full relative">
-              <img src={selectedUser.profilePic || "../public/user-avatar.png"} alt={selectedUser.fullName} />
+              <img src={selectedUser.profilePic || "/user-avatar.png"} alt={selectedUser.fullName} />
             </div>
           </div>
 
@@ -27,9 +32,14 @@ const ChatHeader = () => {
         </div>
 
         {/* Close button */}
-        <button onClick={() => setSelectedUser(null)}>
-          <ArrowLeftFromLine />
-        </button>
+        <div className="flex justify-around">
+          <button className="m-1" onClick={() => setSelectedUser(null)}>
+            <ArrowLeftFromLine className="cursor-pointer"/>
+          </button>
+          <button className="m-1" onClick={() => handleChatSettings()}>
+            <CircleAlert className="cursor-pointer"/>
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import ChatHeader from "./ChatHeader";
 import MessageInput from "./MessageInput";
 import MessageSkeleton from "./skeletons/MessageSkeleton";
 import ChattingSkeleton from "./skeletons/ChattingSkeleton";
+import ChatSettings from "./ChatSettings"
 import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../lib/utils";
 
@@ -15,6 +16,7 @@ const ChatContainer = () => {
     selectedUser,
     updateMessage,
     closeMessage,
+    isShowSettings,
   } = useChatStore();
 
   const { authUser } = useAuthStore();
@@ -22,8 +24,10 @@ const ChatContainer = () => {
 
   useEffect(() => {
     getMessages(selectedUser._id);
-
     updateMessage();
+
+    // Reset Show Settings
+    useChatStore.setState({isShowSettings: false});
 
     return () => closeMessage();
   }, [selectedUser._id, getMessages, updateMessage, closeMessage]);
@@ -44,10 +48,20 @@ const ChatContainer = () => {
     );
   }
 
+  if (isShowSettings){
+    return(
+      <div className="flex-1 flex flex-col overflow-auto">
+        <ChatHeader />
+        <ChatSettings />
+      </div>
+    )
+  }
+
+
   return (
   <div className="flex-1 flex flex-col overflow-hidden">
     <ChatHeader />
-
+    
     <div className="flex-1 overflow-y-auto p-4 space-y-4">
       {messages.map((message) => (
         <div
