@@ -51,19 +51,17 @@ const ChatContainer = () => {
   if (isShowSettings){
     return(
       <div className="flex-1 flex flex-col overflow-auto">
-        <ChatHeader />
         <ChatSettings />
       </div>
     )
   }
-
 
   return (
   <div className="flex-1 flex flex-col overflow-hidden">
     <ChatHeader />
     
     <div className="flex-1 overflow-y-auto p-4 space-y-4">
-      {messages.map((message) => (
+      {messages.slice(0,10).map((message) => (
         <div
           key={message._id}
           className={`chat ${
@@ -79,8 +77,8 @@ const ChatContainer = () => {
               <img
                 src={
                   message.senderId === (authUser._id || authUser.userData._id)
-                    ? (authUser.profilePic || authUser.userData?.profilePic) || "user-avatar.png"
-                    : (selectedUser.profilePic || selectedUser.userData?.profilePic) || "user-avatar.png"
+                    ? (authUser.profilePic || authUser.userData?.profilePic) || "./user-avatar.png"
+                    : (selectedUser.profilePic || selectedUser.userData?.profilePic) || "./user-avatar.png"
                 }
                 alt="profile pic"
               />

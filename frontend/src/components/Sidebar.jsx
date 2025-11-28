@@ -57,7 +57,7 @@ const Sidebar = () => {
         >
           <div className="relative mx-auto sm:mx-0">
             <img
-              src={user.profilePic || "../public/user-avatar.png"}
+              src={user.profilePic || "./user-avatar.png"}
               alt={user.name}
               className="w-10 h-10 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full object-cover"
             />

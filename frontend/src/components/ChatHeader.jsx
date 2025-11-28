@@ -24,8 +24,8 @@ const ChatHeader = () => {
 
           {/* User info */}
           <div>
-            <h3 className="font-medium">{selectedUser.fullName}</h3>
-            <p className="text-sm text-base-content/70">
+            <h3 className="font-medium text-sm md:text-xl">{selectedUser.fullName}</h3>
+            <p className="text-xs text-base-content/70 md:text-sm">
               {onlineUsers.includes(selectedUser._id) ? "Online" : "Offline"}
             </p>
           </div>
@@ -34,10 +34,10 @@ const ChatHeader = () => {
         {/* Close button */}
         <div className="flex justify-around">
           <button className="m-1" onClick={() => setSelectedUser(null)}>
-            <ArrowLeftFromLine className="cursor-pointer"/>
+            <ArrowLeftFromLine className="cursor-pointer size-5 md:size-auto"/>
           </button>
           <button className="m-1" onClick={() => handleChatSettings()}>
-            <CircleAlert className="cursor-pointer"/>
+            <CircleAlert className="cursor-pointer size-5 md:size-auto"/>
           </button>
         </div>
       </div>
