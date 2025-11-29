@@ -18,7 +18,7 @@ const __dirname = path.dirname(__filename);
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://192.168.5.136:5173"],
+    origin: true,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
@@ -35,12 +35,7 @@ app.use("/api/v1/message", messageRoutes);
 if (process.env.NODE_ENV === "production") {
   const frontendPath = path.join(__dirname, "../../frontend/dist");
   
-  // Serve static files
   app.use(express.static(frontendPath));
-
-  // REMOVED the catch-all route - not needed for ngrok testing
-  // You only need this when deploying to production where 
-  // frontend and backend are served from the same domain
 }
 
 server.listen(PORT, () => {

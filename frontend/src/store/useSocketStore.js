@@ -1,9 +1,7 @@
 import { io } from "socket.io-client";
 import {create} from "zustand";
-import { useChatStore } from "./useChatStore";
-import { useAuthStore } from "./useAuthStore";
 
-const SOCKET_BASE_URL = import.meta.env.MODE === "development" ? "http://192.168.5.136:5001" : "/";
+const SOCKET_BASE_URL = import.meta.env.MODE === "development" ? `http://${window.location.hostname}:5001` : "/";
 
 export const useSocketStore = create((set,get) => ({
     socket: null,
@@ -22,8 +20,9 @@ export const useSocketStore = create((set,get) => ({
         });
 
         newSocket.connect();
-
         set({socket: newSocket})
+
+        console.log('connection');
 
         newSocket.on("getOnlineUsers", (userIds) => {          
             set({onlineUsers: userIds});

@@ -8,29 +8,59 @@ import ChatSettings from "./ChatSettings"
 import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../lib/utils";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+const useSocketListener = (selectedUserId) => {
+    const queryClient = useQueryClient();
+    const { updateMessage, closeMessage, setSelectedUser } = useChatStore.getState(); 
+
+    useEffect(() => {
+        if (!selectedUserId) return;
+        
+        // Pass the queryClient and the specific ID to the store function
+        const handle = updateMessage(queryClient, selectedUserId); 
+        
+        return () => {
+   
+             closeMessage(); 
+        };
+    }, [selectedUserId, queryClient]);
+};
+
 const ChatContainer = () => {
-  const {
-    messages,
-    getMessages,
-    isMessagesLoading,
-    selectedUser,
-    updateMessage,
-    closeMessage,
-    isShowSettings,
-  } = useChatStore();
+    const queryClient = useQueryClient(); 
+
+    const {
+        selectedUser,
+        updateMessage, 
+        closeMessage,  
+        isShowSettings,
+        getMessages 
+    } = useChatStore();
 
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
 
-  useEffect(() => {
-    getMessages(selectedUser._id);
-    updateMessage();
+  const {
+    data: messages,
+    isLoading,
+    isError,
+    error } = useQuery({
+      queryKey: ['messages', selectedUser._id],
+      queryFn: () => getMessages(selectedUser._id),
+      enabled: !!selectedUser._id,
+    });
 
-    // Reset Show Settings
+  useSocketListener(selectedUser._id);
+
+
+  useEffect(() => {
+    if (!selectedUser) return;
+
     useChatStore.setState({isShowSettings: false});
 
     return () => closeMessage();
-  }, [selectedUser._id, getMessages, updateMessage, closeMessage]);
+  }, [selectedUser?._id]);
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
@@ -38,7 +68,7 @@ const ChatContainer = () => {
     }
   }, [messages]);
 
-  if (isMessagesLoading) {
+  if (isLoading) {
     return (
       <div className="flex-1 flex flex-col overflow-auto">
         <ChatHeader />
@@ -113,4 +143,5 @@ const ChatContainer = () => {
   </div>
   );
 };
+
 export default ChatContainer;

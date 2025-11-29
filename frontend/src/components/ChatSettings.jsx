@@ -1,11 +1,16 @@
 import { Users, Image, Film, Music, File, Bell, Lock, Palette, Shield, ArrowLeftFromLine} from 'lucide-react';
 import { useState } from 'react';
 import { useChatStore } from '../store/useChatStore';
+import { useQueryClient } from "@tanstack/react-query";
 
 const ChatSettings = () => {
+    const queryClient = useQueryClient();
+
     const [viewImages, setViewImages] = useState(false);
-    const {messages, selectedUser} = useChatStore();
+    const {selectedUser} = useChatStore();
+    const messages = queryClient.getQueryData(['messages', selectedUser._id]);
     const images = messages.filter(message => message.image).map(message => message.image); 
+    
     
     const handleViewImages = () => {
         setViewImages(!viewImages);

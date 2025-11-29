@@ -7,7 +7,14 @@ const server = http.createServer(app);
 
 const websocket = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", "http://192.168.5.136:5173", "*"],
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or Postman)
+      if (!origin) return callback(null, true);
+      
+      // Allow all origins dynamically
+      callback(null, true);
+    },
+    credentials: true,
     methods: ["GET", "POST"],
   },
 });

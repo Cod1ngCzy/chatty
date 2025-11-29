@@ -1,24 +1,33 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 import { Users, MessageCircleMore } from "lucide-react";
 import { useSocketStore } from "../store/useSocketStore";
+import { useQuery } from "@tanstack/react-query";
+
 
 const Sidebar = () => {
-  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } = useChatStore();
+  const { selectedUser, getUsers, setSelectedUser } = useChatStore();
 
   const { onlineUsers, isTyping } = useSocketStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
 
-  useEffect(() => {
-    getUsers();
-  }, [getUsers]);
+    const {
+    data: users,
+    isLoading,
+    isError,
+    error } = useQuery({
+      queryKey: ['users'],
+      queryFn: getUsers,
+      staleTime: 1000 * 60 * 5,
+    });
+
 
   const filteredUsers = showOnlineOnly
     ? users.filter((user) => onlineUsers.includes(user._id))
     : users;
 
-  if (isUsersLoading) return <SidebarSkeleton />;
+  if (isLoading) return <SidebarSkeleton />;
 
   return (
   <aside className={`flex flex-row sm:flex-col h-20 sm:h-full w-full sm:w-20 lg:w-72 sm:border-r border-base-300 transition-all duration-200 ${selectedUser ? 'hidden sm:flex' : 'flex'}`}>

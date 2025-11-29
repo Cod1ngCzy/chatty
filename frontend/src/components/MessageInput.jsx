@@ -2,14 +2,36 @@ import { useRef, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { Image, Send, X } from "lucide-react";
 import toast from "react-hot-toast";
-import { useSocketStore } from "../store/useSocketStore";
-import ChattingSkeleton from "./skeletons/ChattingSkeleton";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const MessageInput = () => {
+  const queryClient = useQueryClient();
+
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
+
   const { sendMessage, selectedUser, isTyping, isReceiverTyping} = useChatStore();
+
+  const mutation = useMutation({
+    mutationFn: sendMessage,
+    onSuccess: (newMessage) => {
+      queryClient.invalidateQueries({ queryKey: ['messages', selectedUser._id] });
+      queryClient.setQueryData(['messages', selectedUser._id], (oldMessages) => {
+                // Ensure oldMessages is an array before spreading
+                return oldMessages ? [...oldMessages, newMessage] : [newMessage];
+            });
+      setText("");
+      setImagePreview(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    },
+    onError: (error) => {
+      toast.error("Failed to send message");
+      throw error;
+    }
+  })
+
+  const isSending = mutation.isPending; // Use React Query's pending state
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -34,19 +56,10 @@ const MessageInput = () => {
     e.preventDefault();
     if (!text.trim() && !imagePreview) return;
 
-    try {
-      await sendMessage({
-        text: text.trim(),
-        image: imagePreview,
-      });
-
-      // Clear form
-      setText("");
-      setImagePreview(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    } catch (error) {
-      console.error("Failed to send message:", error);
-    }
+    mutation.mutate({
+            text: text.trim(),
+            image: imagePreview,
+    });
   };
 
   const handleInputChange = (e) => {
@@ -105,7 +118,7 @@ const MessageInput = () => {
         <button
           type="submit"
           className="btn btn-sm btn-circle"
-          disabled={!text.trim() && !imagePreview}
+          disabled={isSending}
         >
           <Send size={22} />
         </button>

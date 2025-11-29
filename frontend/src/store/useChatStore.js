@@ -4,61 +4,62 @@ import { api } from "../lib/axios.js";
 import { useSocketStore } from "./useSocketStore.js";
 
 export const useChatStore = create((set, get) => ({
-    messages: [],
-    users: [],
     selectedUser: null,
-    isUserLoading: false,
-    isMessagesLoading: false,
     isReceiverTyping: false,
     isShowSettings: false,
     
     getUsers: async () => {
-        set({ isUserLoading: true});
         try{
             const res = await api.get("/message/users");
-            set({users: res.data});
+            return res.data
         } catch (error){
             toast.error(error.response.data.message);
-        } finally {
-            set({ isUserLoading: false });
+            throw error;
         }
     },
 
     getMessages: async(selectedUserId) => {
-        set({ isMessagesLoading: true});
+        if (!selectedUserId) throw new Error("No User Selected");
+        
         try {
             const res = await api.get(`/message/${selectedUserId}`);
-            set({messages: res.data});
+            return res.data
         } catch (error){
             toast.error( "Error" || error.response.data.message);
-        } finally {
-            set({ isMessagesLoading: false });
-        }
+            throw error;
+        } 
     },
 
     sendMessage: async(messageData) => {
-        const {selectedUser, messages} = get();
+        const {selectedUser} = get();
+        if (!selectedUser) throw new Error("No User Selected");
+        
         try{
             const res = await api.post(`/message/send/${selectedUser._id}`, messageData);
-            set({messages: [...messages, res.data]});
+            return res.data
         } catch (error){
             toast.error(error.response.data.message);
+            throw error;
         }
     },
 
-    updateMessage: () => {
-        const { selectedUser } = get();
+    updateMessage: (queryClient) => {
         const socket = useSocketStore.getState().socket;
+        const { selectedUser } = get();
 
         if (!selectedUser || !socket) return;
-        
-        socket.on("newMessage", (newMessage) => {
+
+        const handleNewMessage = (newMessage) => {
             const isMessageFromSelectedUser = newMessage.senderId === selectedUser._id;
             if(!isMessageFromSelectedUser) return;
-            set({
-                messages: [...get().messages, newMessage]
+
+            queryClient.setQueryData(['messages', selectedUser._id], (oldMessages) => {
+                return oldMessages ? [...oldMessages, newMessage] : [newMessage]
             });
-        });
+        };
+
+        socket.on("newMessage", handleNewMessage);
+        return handleNewMessage
     },
 
     closeMessage: () => {

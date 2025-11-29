@@ -12,6 +12,8 @@ import {Loader} from "lucide-react";
 import {Toaster} from "react-hot-toast";
 import Navbar from './components/Navbar.jsx';
 
+import Dev from './pages/Dev.jsx';
+
 const App = () => {
   const {authUser, checkAuth, isCheckingAuth} = useAuthStore()
   const {theme} = useThemeStore();
@@ -29,12 +31,14 @@ const App = () => {
   return (
     <div data-theme={theme}>
         < Navbar />
+        
         <Routes>
           <Route path="/" element={authUser ? <HomePage /> : <Navigate to="/login"/> } />
           <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/"/> } />
           <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/"/>} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login"/>} />
+          <Route path="/dev" element={<Dev />} />
         </Routes>
 
         <Toaster/>
